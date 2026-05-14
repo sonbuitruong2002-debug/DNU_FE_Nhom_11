@@ -1,13 +1,38 @@
 const ORDERS_API = 'https://6a0601bec83ba8ad9b3d1dd1.mockapi.io/orders';
 let statusModalInstance;
+let currentOrderSnapshot = '';
+let refreshTimerId = null;
+
+function checkAdminAccess() {
+    const isAdmin = sessionStorage.getItem('isAdmin');
+    if (isAdmin === 'true') {
+        return true;
+    }
+
+    const code = prompt('Mã quản trị');
+    if (code === 'Admin@123') {
+        sessionStorage.setItem('isAdmin', 'true');
+        return true;
+    }
+
+    alert('Bạn không có quyền truy cập');
+    window.location.href = 'index.html';
+    return false;
+}
 
 document.addEventListener('DOMContentLoaded', function () {
+    if (!checkAdminAccess()) {
+        return;
+    }
+
     const orderTableBody = document.getElementById('order-table-body');
     const refreshOrdersButton = document.getElementById('refresh-orders');
     const statusModalElement = document.getElementById('statusModal');
 
     if (orderTableBody) {
-        loadOrders();
+        loadOrders().then(() => {
+            startAutoRefreshOrders();
+        });
         $('#order-table-body').on('click', '.update-status-btn', function () {
             const orderId = $(this).data('order-id');
             const currentStatus = $(this).data('order-status');
@@ -28,7 +53,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-function loadOrders() {
+function startAutoRefreshOrders() {
+    if (refreshTimerId) {
+        clearInterval(refreshTimerId);
+    }
+    refreshTimerId = setInterval(autoRefreshOrders, 10000);
+}
+
+function autoRefreshOrders() {
     fetch(ORDERS_API)
         .then(response => {
             if (!response.ok) {
@@ -37,7 +69,58 @@ function loadOrders() {
             return response.json();
         })
         .then(orders => {
+            const newSnapshot = getOrdersSnapshot(orders);
+            if (currentOrderSnapshot && newSnapshot !== currentOrderSnapshot) {
+                const previousOrders = JSON.parse(currentOrderSnapshot);
+                if (Array.isArray(previousOrders) && orders.length > previousOrders.length) {
+                    showNewOrderToast(orders.length - previousOrders.length);
+                }
+                renderOrders(orders);
+            }
+            currentOrderSnapshot = newSnapshot;
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+function getOrdersSnapshot(orders) {
+    if (!Array.isArray(orders)) {
+        return '';
+    }
+
+    const snapshotArray = orders.slice().sort((a, b) => {
+        const idA = String(a.id);
+        const idB = String(b.id);
+        return idA.localeCompare(idB, undefined, { numeric: true });
+    }).map(order => ({
+        id: order.id,
+        status: order.status,
+        customerName: order.customerName || order.name,
+        item: order.item || order.food,
+        total: order.total
+    }));
+
+    return JSON.stringify(snapshotArray);
+}
+
+function showNewOrderToast(newCount) {
+    const toast = $('#new-order-toast');
+    toast.text(`Có ${newCount} đơn hàng mới vừa được đặt!`).stop(true, true).slideDown(200).delay(3000).slideUp(200);
+}
+
+function loadOrders() {
+    return fetch(ORDERS_API)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Không thể tải danh sách đơn hàng.');
+            }
+            return response.json();
+        })
+        .then(orders => {
             renderOrders(orders);
+            currentOrderSnapshot = getOrdersSnapshot(orders);
+            return orders;
         })
         .catch(error => {
             console.error(error);
@@ -45,6 +128,7 @@ function loadOrders() {
             if (orderTableBody) {
                 orderTableBody.innerHTML = '<tr><td colspan="6"><div class="alert alert-danger mb-0">Lỗi tải dữ liệu đơn hàng.</div></td></tr>';
             }
+            return [];
         });
 }
 
@@ -102,7 +186,7 @@ function createStatusBadge(status) {
             badgeClass = 'bg-success';
             break;
         default:
-            if (status.toLowerCase().includes('ship')) {
+            if (typeof status === 'string' && status.toLowerCase().includes('ship')) {
                 badgeClass = 'bg-info text-dark';
             } else {
                 badgeClass = 'bg-secondary';
@@ -155,11 +239,26 @@ function submitStatusUpdate() {
             if (statusModalInstance) {
                 statusModalInstance.hide();
             }
+            currentOrderSnapshot = getOrdersSnapshot(collectCurrentOrders());
         },
         error: function () {
             alert('Cập nhật trạng thái đơn hàng thất bại. Vui lòng thử lại.');
         }
     });
+}
+
+function collectCurrentOrders() {
+    const rows = [];
+    $('#order-table-body tr').each(function () {
+        const row = $(this);
+        const id = row.attr('id')?.replace('order-row-', '') || '';
+        const customerName = row.find('td').eq(1).text().trim();
+        const itemName = row.find('td').eq(2).text().trim();
+        const totalText = row.find('td').eq(3).text().trim().replace('đ', '').replace(/\./g, '');
+        const statusText = row.find('.status-cell .badge').text().trim();
+        rows.push({ id, customerName, item: itemName, total: Number(totalText) || 0, status: statusText });
+    });
+    return rows;
 }
 
 function formatMoney(value) {

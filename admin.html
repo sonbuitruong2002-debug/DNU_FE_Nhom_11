@@ -5,77 +5,115 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin QuickOrder</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="CSS/style.css" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-glass py-3">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="index.html">
-                <span class="fs-5">🛵 QuickOrder Admin</span>
+                <span class="brand-mark">🛵</span>
+                <span class="ms-2 fw-semibold">QuickOrder Admin</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar" aria-controls="adminNavbar" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="adminNavbar">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-3">
+                        <a class="nav-link text-white" href="index.html">Trang chủ</a>
+                    </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="index.html">Trang chủ</a>
+                        <button class="btn btn-outline-light btn-sm" id="refresh-orders">Tải lại dữ liệu</button>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
+    <div id="new-order-toast" class="alert alert-success position-fixed top-0 end-0 m-3 shadow-lg" style="display: none; z-index: 1080;">
+        Có đơn hàng mới vừa được đặt!
+    </div>
+
     <main class="container my-5">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
-            <div>
-                <h1 class="h3 mb-1">Bảng quản lý đơn hàng</h1>
-                <p class="text-muted mb-0">Theo dõi trạng thái đơn hàng và cập nhật nhanh chóng.</p>
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="order-summary-card p-4 rounded-4 shadow-sm">
+                    <p class="text-uppercase text-muted small mb-2">Tổng đơn hàng</p>
+                    <h3 class="mb-0" id="total-orders">0</h3>
+                </div>
             </div>
-            <div class="mt-3 mt-md-0">
-                <button type="button" class="btn btn-primary" id="refresh-orders">Tải lại dữ liệu</button>
+            <div class="col-md-3">
+                <div class="order-summary-card p-4 rounded-4 shadow-sm">
+                    <p class="text-uppercase text-muted small mb-2">Đang chờ</p>
+                    <h3 class="mb-0" id="pending-orders">0</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="order-summary-card p-4 rounded-4 shadow-sm">
+                    <p class="text-uppercase text-muted small mb-2">Đang giao</p>
+                    <h3 class="mb-0" id="shipping-orders">0</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="order-summary-card p-4 rounded-4 shadow-sm">
+                    <p class="text-uppercase text-muted small mb-2">Hoàn thành</p>
+                    <h3 class="mb-0" id="completed-orders">0</h3>
+                </div>
             </div>
         </div>
 
-        <div class="table-responsive shadow-sm rounded">
-            <table class="table table-striped align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th scope="col">ID</th>
-                        <th scope="col">Tên khách</th>
-                        <th scope="col">Món ăn</th>
-                        <th scope="col">Tổng tiền</th>
-                        <th scope="col">Trạng thái</th>
-                        <th scope="col">Hành động</th>
-                    </tr>
-                </thead>
-                <tbody id="order-table-body">
-                </tbody>
-            </table>
+        <div class="card rounded-4 shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+                    <div>
+                        <h1 class="h4 mb-1">Quản lý đơn hàng</h1>
+                        <p class="text-muted mb-0">Xem nhanh và cập nhật trạng thái đơn hàng hiệu quả.</p>
+                    </div>
+                    <div class="w-100 w-md-auto">
+                        <input type="search" class="form-control form-control-lg" placeholder="Tìm theo tên khách hoặc ID" id="order-search">
+                    </div>
+                </div>
+                <div class="table-responsive rounded-4 overflow-hidden">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Tên khách</th>
+                                <th scope="col">Món ăn</th>
+                                <th scope="col">Tổng tiền</th>
+                                <th scope="col">Trạng thái</th>
+                                <th scope="col">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="order-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </main>
 
     <div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
+            <div class="modal-content rounded-4 shadow-lg border-0">
+                <div class="modal-header border-0">
                     <h5 class="modal-title" id="statusModalLabel">Cập nhật trạng thái đơn hàng</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="status-form">
                         <input type="hidden" id="statusOrderId">
-                        <div class="mb-3">
-                            <label for="statusSelect" class="form-label">Chọn trạng thái mới</label>
+                        <div class="form-floating mb-3">
                             <select class="form-select" id="statusSelect">
                                 <option value="Pending">Pending</option>
                                 <option value="Shipping">Shipping</option>
                                 <option value="Completed">Completed</option>
                             </select>
+                            <label for="statusSelect">Chọn trạng thái mới</label>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
                     <button type="button" class="btn btn-primary" id="save-status-btn">Cập nhật</button>
                 </div>
             </div>
