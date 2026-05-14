@@ -1,0 +1,27 @@
+Plaintext
+===========================================================
+KIẾN THỨC TRỌNG TÂM: BỐ CỤC VÀ GIAO DIỆN (STEP 1)
+===========================================================
+
+1. TẠI SAO DÙNG BOOTSTRAP 5?
+- Giúp dựng giao diện nhanh, chuyên nghiệp và có sẵn tính năng Responsive.
+- Sử dụng Grid System (Container -> Row -> Col) để chia cột linh hoạt.
+
+2. CÁC BREAKPOINTS CẦN NHỚ (YÊU CẦU BẮT BUỘC):
+- Mobile: < 576px (Dùng class col-12).
+- Tablet: ≥ 768px (Dùng class col-md-6).
+- Desktop: ≥ 992px (Dùng class col-lg-4 hoặc col-xl-3).
+
+3. CÁC COMPONENT ĐÃ SỬ DỤNG:
+- Navbar: Điều hướng giữa trang chủ và admin.
+- Card: Trình bày thông tin quán ăn/món ăn sinh động.
+- Modal: Giữ người dùng ở lại trang hiện tại khi thực hiện đặt hàng (tối ưu trải nghiệm).
+- Table & Badge: Quản lý dữ liệu đơn hàng khoa học và trực quan.
+
+4. QUY TẮC CẤU TRÚC THƯ MỤC:
+- Tách biệt CSS, JS và Image giúp dự án dễ bảo trì và mở rộng.
+- Tệp 'utils.js' dùng để chứa các hàm dùng chung như Validate hoặc định dạng tiền.
+
+5. LƯU Ý VỀ AI (VIBE CODING):
+- AI hỗ trợ viết khung HTML nhanh, nhưng tôi phải tự tay kiểm tra các ID và Class để đảm bảo logic JavaScript sau này gọi đúng phần tử DOM[cite: 13, 20].
+===========================================================
