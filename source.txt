@@ -1,0 +1,3 @@
+restaurants: https://6a058aafaa826ca75c0a1693.mockapi.io/restaurants
+items : https://6a058aafaa826ca75c0a1693.mockapi.io/items
+Orders: https://6a0601bec83ba8ad9b3d1dd1.mockapi.io/orders
